@@ -683,7 +683,7 @@
 
     function updateBotStatus(status) {
       const el = document.getElementById('bot-status');
-      const isOnline = status === 'running' || status === 'online';
+      const isOnline = status === 'running' || status === 'online' || status === 'starting';
       el.className = `status-indicator ${isOnline ? 'status-online' : 'status-offline'}`;
       el.innerHTML = `
         <span class="status-dot"></span>
