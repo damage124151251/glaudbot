@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GLAUD - AI Analysis System</title>
+  <link rel="icon" href="https://media.discordapp.net/attachments/1454587961642582039/1458687661614043391/ChatGPT_Image_8_de_jan._de_2026_01_52_08.png?ex=69608c3f&is=695f3abf&hm=e4e4d2ba60ee80918eb4896f853a80c4a13ed390dfcd5142888ec3229609992d&=&format=webp&quality=lossless&width=64&height=64" type="image/png">
+  <style>
+    :root {
+      --orange: #E07A3D;
+      --coral: #F4A261;
+      --cream: #FFF8F0;
+      --dark: #1a1a2e;
+      --darker: #0f0f1a;
+      --card-bg: rgba(30, 30, 50, 0.8);
+      --glass: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --success: #4ade80;
+      --error: #f87171;
+      --warning: #fbbf24;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 50%, #1a2a1a 100%);
+      color: var(--cream);
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-size: 14px;
+    }
+
+    /* Animated background */
+    .bg-animation {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--orange) 0%, transparent 70%);
+      opacity: 0.1;
+      animation: float 20s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-100px) scale(1.1); }
+    }
+
+    /* Header */
+    header {
+      position: relative;
+      z-index: 10;
+      padding: 2rem;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(224, 122, 61, 0.2) 0%, transparent 100%);
+    }
+
+    .logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 0.5rem;
+      border-radius: 50%;
+      border: 3px solid var(--orange);
+      box-shadow: 0 0 30px rgba(224, 122, 61, 0.4);
+    }
+
+    h1 {
+      font-size: 3rem;
+      background: linear-gradient(135deg, var(--orange), var(--coral));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .tagline {
+      color: var(--coral);
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    /* Main content */
+    main {
+      position: relative;
+      z-index: 10;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1rem 2rem 3rem;
+    }
+
+    /* Grid layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(224, 122, 61, 0.2);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .card-header h2 {
+      font-size: 1.1rem;
+      color: var(--coral);
+    }
+
+    .card-icon {
+      font-size: 1.5rem;
+    }
+
+    /* Stats */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .stat-item {
+      background: var(--glass);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: bold;
+      color: var(--orange);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+
+    /* Status indicator */
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .status-online {
+      background: rgba(74, 222, 128, 0.2);
+      color: var(--success);
+    }
+
+    .status-offline {
+      background: rgba(248, 113, 113, 0.2);
+      color: var(--error);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .status-online .status-dot {
+      background: var(--success);
+    }
+
+    .status-offline .status-dot {
+      background: var(--error);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Token info */
+    .token-price {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: var(--orange);
+      margin: 1rem 0;
+    }
+
+    .token-change {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .token-change.positive {
+      background: rgba(74, 222, 128, 0.2);
+      color: var(--success);
+    }
+
+    .token-change.negative {
+      background: rgba(248, 113, 113, 0.2);
+      color: var(--error);
+    }
+
+    .token-details {
+      margin-top: 1rem;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .token-detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .token-detail-row:last-child {
+      border-bottom: none;
+    }
+
+    /* Chat */
+    .chat-container {
+      grid-column: span 2;
+    }
+
+    @media (max-width: 768px) {
+      .chat-container {
+        grid-column: span 1;
+      }
+    }
+
+    .chat-messages {
+      height: 300px;
+      overflow-y: auto;
+      padding: 1rem;
+      background: var(--glass);
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .message {
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      max-width: 85%;
+    }
+
+    .message.user {
+      background: var(--orange);
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.assistant {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-sender {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-bottom: 0.25rem;
+    }
+
+    .chat-input-container {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 1rem;
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      background: var(--glass);
+      color: var(--cream);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .chat-input:focus {
+      border-color: var(--orange);
+    }
+
+    .chat-input::placeholder {
+      color: rgba(255, 248, 240, 0.5);
+    }
+
+    .chat-send {
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, var(--orange), var(--coral));
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .chat-send:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 20px rgba(224, 122, 61, 0.4);
+    }
+
+    .chat-send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* History */
+    .history-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem;
+      background: var(--glass);
+      border-radius: 10px;
+      margin-bottom: 0.5rem;
+    }
+
+    .history-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .history-icon.claim {
+      background: rgba(251, 191, 36, 0.2);
+    }
+
+    .history-icon.buyback {
+      background: rgba(74, 222, 128, 0.2);
+    }
+
+    .history-icon.burn {
+      background: rgba(248, 113, 113, 0.2);
+    }
+
+    .history-info {
+      flex: 1;
+    }
+
+    .history-type {
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .history-time {
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+
+    .history-amount {
+      font-weight: 600;
+      color: var(--coral);
+    }
+
+    /* Loading */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--glass-border);
+      border-top-color: var(--orange);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Footer */
+    footer {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--glass-border);
+      margin-top: 2rem;
+    }
+
+    footer p {
+      opacity: 0.6;
+      font-size: 0.9rem;
+    }
+
+    footer a {
+      color: var(--coral);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--glass);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--orange);
+      border-radius: 4px;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      header {
+        padding: 1.5rem 1rem;
+      }
+
+      .logo {
+        font-size: 3rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      main {
+        padding: 1rem;
+      }
+
+      .stat-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .token-price {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background animation -->
+  <div class="bg-animation">
+    <div class="bubble" style="width: 300px; height: 300px; left: 10%; top: 20%;"></div>
+    <div class="bubble" style="width: 200px; height: 200px; right: 15%; top: 60%; animation-delay: -5s;"></div>
+    <div class="bubble" style="width: 250px; height: 250px; left: 50%; bottom: 10%; animation-delay: -10s;"></div>
+  </div>
+
+  <header>
+    <img src="https://media.discordapp.net/attachments/1454587961642582039/1458687661614043391/ChatGPT_Image_8_de_jan._de_2026_01_52_08.png?ex=69608c3f&is=695f3abf&hm=e4e4d2ba60ee80918eb4896f853a80c4a13ed390dfcd5142888ec3229609992d&=&format=webp&quality=lossless&width=120&height=120" alt="GLAUD" class="logo">
+    <h1>GLAUD</h1>
+    <p class="tagline">Solana Token Analysis System</p>
+  </header>
+
+  <main>
+    <!-- Status Bar -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <span id="bot-status" class="status-indicator status-offline">
+            <span class="status-dot"></span>
+            <span>Checking...</span>
+          </span>
+        </div>
+        <div style="opacity: 0.7; font-size: 0.9rem;">
+          Last updated: <span id="last-update">-</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Token Info -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">📊</span>
+          <h2>Token Info</h2>
+        </div>
+        <div id="token-info">
+          <div style="text-align: center; padding: 2rem; opacity: 0.6;">
+            <div class="loading"></div>
+            <p style="margin-top: 1rem;">Loading token data...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bot Stats -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">🔥</span>
+          <h2>Buyback & Burn Stats</h2>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="stat-sol">0</div>
+            <div class="stat-label">SOL Buyback</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="stat-burned">0</div>
+            <div class="stat-label">Tokens Burned</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="stat-cycles">0</div>
+            <div class="stat-label">Cycles</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="stat-action">-</div>
+            <div class="stat-label">Last Action</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat -->
+      <div class="card chat-container">
+        <div class="card-header">
+          <span class="card-icon">&gt;_</span>
+          <h2>GLAUD Terminal</h2>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="message assistant">
+            <div class="message-sender">[GLAUD]</div>
+            <div>System initialized. Ready for token analysis queries. Available commands: price analysis, liquidity check, risk assessment, market sentiment. Input your query.</div>
+          </div>
+        </div>
+        <div class="chat-input-container">
+          <input type="text" class="chat-input" id="chat-input" placeholder="Enter query..." maxlength="500">
+          <button class="chat-send" id="chat-send">Execute</button>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">📜</span>
+          <h2>Recent Activity</h2>
+        </div>
+        <div class="history-list" id="history-list">
+          <div style="text-align: center; padding: 2rem; opacity: 0.6;">
+            No activity yet
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>GLAUD // Solana Token Analysis System</p>
+    <p style="margin-top: 0.5rem;">Powered by <a href="https://claude.ai" target="_blank">Claude AI</a></p>
+  </footer>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // ================================
+    // CONFIGURATION
+    // ================================
+    const CONFIG = {
+      API_URL: 'http://localhost:3001',
+      SUPABASE_URL: 'https://tfehwbzajyaagbnfnudo.supabase.co',
+      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmZWh3YnphanlhYWdibmZudWRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NDMwNjUsImV4cCI6MjA4MzQxOTA2NX0.pECP9ly16bbuFqSyf8OSxP9tMhaOpbtRtrfN_AOLc6k',
+      REFRESH_INTERVAL: 30000,
+    };
+
+    // ================================
+    // STATE
+    // ================================
+    let supabase = null;
+    let isConnected = false;
+
+    // ================================
+    // INITIALIZATION
+    // ================================
+    document.addEventListener('DOMContentLoaded', () => {
+      initSupabase();
+      initChat();
+      fetchAllData();
+      setInterval(fetchAllData, CONFIG.REFRESH_INTERVAL);
+    });
+
+    function initSupabase() {
+      if (CONFIG.SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+        try {
+          supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+          subscribeToRealtime();
+        } catch (e) {
+          console.warn('Supabase init failed:', e);
+        }
+      }
+    }
+
+    function subscribeToRealtime() {
+      if (!supabase) return;
+
+      // Subscribe to stats changes
+      supabase
+        .channel('stats-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'stats' }, (payload) => {
+          console.log('Stats update:', payload);
+          updateStatsUI(payload.new);
+        })
+        .subscribe();
+
+      // Subscribe to new actions
+      supabase
+        .channel('actions-changes')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'actions' }, (payload) => {
+          console.log('New action:', payload);
+          fetchHistory();
+        })
+        .subscribe();
+    }
+
+    // ================================
+    // DATA FETCHING
+    // ================================
+    async function fetchAllData() {
+      await Promise.all([
+        fetchStatus(),
+        fetchStats(),
+        fetchToken(),
+        fetchHistory(),
+      ]);
+      updateLastUpdate();
+    }
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch(`${CONFIG.API_URL}/status`);
+        const data = await res.json();
+        updateStatusUI(data);
+        isConnected = true;
+      } catch (e) {
+        console.error('Status fetch failed:', e);
+        updateStatusUI({ online: false, status: 'offline' });
+        isConnected = false;
+      }
+    }
+
+    async function fetchStats() {
+      try {
+        const res = await fetch(`${CONFIG.API_URL}/stats`);
+        const data = await res.json();
+        updateStatsUI(data);
+      } catch (e) {
+        console.error('Stats fetch failed:', e);
+      }
+    }
+
+    async function fetchToken() {
+      try {
+        const res = await fetch(`${CONFIG.API_URL}/token`);
+        const data = await res.json();
+        updateTokenUI(data);
+      } catch (e) {
+        console.error('Token fetch failed:', e);
+        updateTokenUI({ detected: false });
+      }
+    }
+
+    async function fetchHistory() {
+      try {
+        const res = await fetch(`${CONFIG.API_URL}/history?limit=10`);
+        const data = await res.json();
+        updateHistoryUI(data.actions || []);
+      } catch (e) {
+        console.error('History fetch failed:', e);
+      }
+    }
+
+    // ================================
+    // UI UPDATES
+    // ================================
+    function updateStatusUI(data) {
+      const el = document.getElementById('bot-status');
+      const isOnline = data.online && data.status !== 'offline';
+
+      el.className = `status-indicator ${isOnline ? 'status-online' : 'status-offline'}`;
+      el.innerHTML = `
+        <span class="status-dot"></span>
+        <span>${isOnline ? 'Online' : 'Offline'}</span>
+      `;
+    }
+
+    function updateStatsUI(data) {
+      document.getElementById('stat-sol').textContent = (data.totalSolBuyback || data.total_sol_buyback || 0).toFixed(4);
+      document.getElementById('stat-burned').textContent = formatNumber(data.totalTokensBurned || data.total_tokens_burned || 0);
+      document.getElementById('stat-cycles').textContent = data.totalCycles || data.total_cycles || 0;
+
+      const lastAction = data.lastAction || data.last_action || '-';
+      document.getElementById('stat-action').textContent = lastAction.length > 20 ? lastAction.substring(0, 20) + '...' : lastAction;
+    }
+
+    function updateTokenUI(data) {
+      const container = document.getElementById('token-info');
+
+      if (!data.detected) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 2rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+            <p style="opacity: 0.7;">Waiting for token creation...</p>
+            <p style="font-size: 0.85rem; opacity: 0.5; margin-top: 0.5rem;">The bot will detect your token automatically</p>
+          </div>
+        `;
+        return;
+      }
+
+      const live = data.live || {};
+      const priceChange = live.priceChange24h || 0;
+      const changeClass = priceChange >= 0 ? 'positive' : 'negative';
+      const changeSign = priceChange >= 0 ? '+' : '';
+
+      container.innerHTML = `
+        <div style="text-align: center;">
+          <div style="font-size: 1.5rem; font-weight: bold; color: var(--coral);">${data.symbol || 'TOKEN'}</div>
+          <div class="token-price">$${(live.priceUsd || 0).toFixed(8)}</div>
+          <span class="token-change ${changeClass}">${changeSign}${priceChange.toFixed(2)}%</span>
+        </div>
+        <div class="token-details">
+          <div class="token-detail-row">
+            <span style="opacity: 0.7;">Market Cap</span>
+            <span>$${formatNumber(live.marketCap || 0)}</span>
+          </div>
+          <div class="token-detail-row">
+            <span style="opacity: 0.7;">Liquidity</span>
+            <span>$${formatNumber(live.liquidity || 0)}</span>
+          </div>
+          <div class="token-detail-row">
+            <span style="opacity: 0.7;">Volume 24h</span>
+            <span>$${formatNumber(live.volume24h || 0)}</span>
+          </div>
+          <div class="token-detail-row">
+            <span style="opacity: 0.7;">Buys/Sells 24h</span>
+            <span style="color: var(--success);">${live.buys24h || 0}</span> / <span style="color: var(--error);">${live.sells24h || 0}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateHistoryUI(actions) {
+      const container = document.getElementById('history-list');
+
+      if (!actions || actions.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 2rem; opacity: 0.6;">No activity yet</div>';
+        return;
+      }
+
+      container.innerHTML = actions.map(action => {
+        const icons = { claim: '💰', buyback: '💚', burn: '🔥' };
+        const icon = icons[action.type] || '📝';
+
+        let amount = '';
+        if (action.amountSol) amount = `${parseFloat(action.amountSol).toFixed(4)} SOL`;
+        else if (action.amountTokens) amount = `${formatNumber(parseInt(action.amountTokens))} tokens`;
+
+        return `
+          <div class="history-item">
+            <div class="history-icon ${action.type}">${icon}</div>
+            <div class="history-info">
+              <div class="history-type">${action.type}</div>
+              <div class="history-time">${formatTime(action.createdAt)}</div>
+            </div>
+            <div class="history-amount">${amount}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateLastUpdate() {
+      document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+    }
+
+    // ================================
+    // CHAT
+    // ================================
+    function initChat() {
+      const input = document.getElementById('chat-input');
+      const button = document.getElementById('chat-send');
+
+      button.addEventListener('click', sendMessage);
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+      });
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const button = document.getElementById('chat-send');
+      const messages = document.getElementById('chat-messages');
+
+      const message = input.value.trim();
+      if (!message) return;
+
+      // Add user message
+      messages.innerHTML += `
+        <div class="message user">
+          <div class="message-sender">You</div>
+          <div>${escapeHtml(message)}</div>
+        </div>
+      `;
+
+      input.value = '';
+      button.disabled = true;
+      messages.scrollTop = messages.scrollHeight;
+
+      // Add loading message
+      const loadingId = 'loading-' + Date.now();
+      messages.innerHTML += `
+        <div class="message assistant" id="${loadingId}">
+          <div class="message-sender">[GLAUD]</div>
+          <div><span class="loading"></span> Processing query...</div>
+        </div>
+      `;
+      messages.scrollTop = messages.scrollHeight;
+
+      try {
+        const res = await fetch(`${CONFIG.API_URL}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message }),
+        });
+
+        const data = await res.json();
+
+        // Replace loading with response
+        const loadingEl = document.getElementById(loadingId);
+        if (loadingEl) {
+          loadingEl.innerHTML = `
+            <div class="message-sender">[GLAUD]</div>
+            <div>${escapeHtml(data.response || data.error || '[ERROR] Query processing failed.')}</div>
+          `;
+        }
+      } catch (e) {
+        console.error('Chat error:', e);
+        const loadingEl = document.getElementById(loadingId);
+        if (loadingEl) {
+          loadingEl.innerHTML = `
+            <div class="message-sender">[GLAUD]</div>
+            <div>[ERROR] Connection failed. Verify bot status.</div>
+          `;
+        }
+      }
+
+      button.disabled = false;
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    // ================================
+    // UTILITIES
+    // ================================
+    function formatNumber(num) {
+      if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+      if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+      if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+      return num.toLocaleString();
+    }
+
+    function formatTime(timestamp) {
+      if (!timestamp) return '-';
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+      if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+      return date.toLocaleDateString();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
