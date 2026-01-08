@@ -557,7 +557,7 @@
     // ================================
     // STATE
     // ================================
-    let supabase = null;
+    let supabaseClient = null;
     let dbConnected = false;
 
     // ================================
@@ -571,7 +571,7 @@
 
     function initSupabase() {
       try {
-        supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+        supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
         subscribeToRealtime();
       } catch (e) {
         console.warn('Supabase init failed:', e);
@@ -580,10 +580,10 @@
     }
 
     function subscribeToRealtime() {
-      if (!supabase) return;
+      if (!supabaseClient) return;
 
       // Subscribe to stats changes
-      supabase
+      supabaseClient
         .channel('stats-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'stats' }, (payload) => {
           console.log('Stats update:', payload);
@@ -592,7 +592,7 @@
         .subscribe();
 
       // Subscribe to new actions
-      supabase
+      supabaseClient
         .channel('actions-changes')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'actions' }, (payload) => {
           console.log('New action:', payload);
@@ -615,7 +615,7 @@
 
     async function fetchStats() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from('stats')
           .select('*')
           .eq('id', 1)
@@ -637,7 +637,7 @@
 
     async function fetchToken() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from('token_info')
           .select('*')
           .order('detected_at', { ascending: false })
@@ -655,7 +655,7 @@
 
     async function fetchHistory() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from('actions')
           .select('*')
           .order('created_at', { ascending: false })
